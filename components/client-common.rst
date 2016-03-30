@@ -76,3 +76,37 @@ If one or more of the requests throw exceptions, they are added to the
     } catch (BatchException $e) {
         var_dump($e->getResult()->getExceptions());
     }
+
+
+HTTP Client Router
+------------------
+
+This client accepts pairs of clients (both sync and async) and request matchers.
+Every request is "routed" through this single client, checked against the request matchers
+and sent using the appropriate client. If there is no matching client, an exception is thrown.
+
+This allows to inject a single client into multiple services,
+but under the hood there can be clients configured for each of them::
+
+    use Http\Client\Common\HttpClientRouter;
+    use Http\Discovery\HttpClientDiscovery;
+    use Http\Message\RequestMatcher\RequestMatcher;
+    use Http\Discovery\MessageFactoryDiscovery;
+
+    $client = new HttpClientRouter();
+
+    $requestMatcher = new RequestMatcher(null, 'api.example.com');
+
+    $client->addClient(HttpClientDiscovery::find(), $requestMatcher);
+
+    $messageFactory = MessageFactoryDiscovery::find();
+
+    $request = $messageFactory->createRequest('GET', 'http://api.example.com/update');
+
+    // Returns a response
+    $client->send($request);
+
+    $request = $messageFactory->createRequest('GET', 'http://api2.example.com/update');
+
+    // Throws an Http\Client\Exception\RequestException
+    $client->send($request);
