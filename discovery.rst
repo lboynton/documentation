@@ -3,12 +3,6 @@ Discovery
 
 The discovery service allows to find and use installed resources.
 
-Under the hood it uses `Puli`_ for the discovery logic. All of our packages provide Puli resources.
-Discovery is simply a convenience wrapper to statically access clients and factories for when
-Dependency Injection is not an option. Discovery is useful in libraries that want to offer
-zero-configuration services relying on the virtual packages. If you have Dependency Injection available,
-using Puli directly is more elegant (see for example the Symfony HttplugBundle).
-
 Consumers of libraries using discovery still need to make sure they install one of the implementations.
 Discovery can only find installed code, not fetch code from other sources.
 
@@ -22,36 +16,63 @@ Currently available discovery services:
 
 The principle is always the same: you call the static ``find`` method on the discovery service if no explicit
 implementation was specified. The discovery service will try to locate a suitable implementation.
-If no implementation is found, an ``Http\Discovery\NotFoundException`` is thrown.
+If no implementation is found, an ``Http\Discovery\Exception\NotFoundException`` is thrown.
+
+.. versionadded:: 0.9
+    The exception ``Http\Discovery\NotFoundException`` has been moved to ``Http\Discovery\Exception\NotFoundException``.
+
+Discovery is simply a convenience wrapper to statically access clients and factories for when
+Dependency Injection is not an option. Discovery is useful in libraries that want to offer
+zero-configuration services relying on the virtual packages.
+
+
+Strategies
+----------
+
+The package supports multiple discovery strategies and comes with two out-of-the-box:
+
+- A built-in strategy with official HTTPlug components
+- A `Puli`_ strategy
+
+Strategies provide candidates of a type which gets evaluated by the discovery service.
+When it finds the best candidate, it caches it and stops looking in further strategies.
+
 
 Installation
 ------------
+
+.. code-block:: bash
+
+    $ composer require php-http/discovery
+
+
+Using Puli
+^^^^^^^^^^
 
 There are two kinds of installation:
 
 - In a reusable library
 - In an application
 
-In both cases you have to install the discovery package itself:
+In both cases you have to install the discovery package itself and set up Puli.
+The easiest way is installing the composer-plugin which automatically configures
+all the composer packages to act as Puli modules.
+
+For applications, simply do:
 
 .. code-block:: bash
 
-    $ composer require php-http/discovery
+    $ composer require puli/composer-plugin
 
-As mentioned above, discovery relies on Puli. In order to use discovery, you need to also set up Puli.
-The easiest way is installing the composer-plugin which automatically configures all the composer packages to act as
-Puli modules. For applications, simply do:
-
-.. code-block:: bash
-
-        $ composer require puli/composer-plugin
 
 If you need the composer-plugin for testing in a reusable library, make it a development dependency instead:
 
 .. code-block:: bash
 
-        $ composer require --dev puli/composer-plugin
+    $ composer require --dev puli/composer-plugin
 
+All of our packages provide Puli resources too, so if Puli is installed, discovery will use it as the primary strategy
+and fall back to the static list.
 
 Read more about setting up Puli in their `official documentation`_.
 
